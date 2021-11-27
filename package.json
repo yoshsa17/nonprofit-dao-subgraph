@@ -1,0 +1,16 @@
+{
+  "name": "non-profit-dao-subgraph",
+  "license": "UNLICENSED",
+  "scripts": {
+    "codegen": "graph codegen",
+    "build": "graph build",
+    "deploy": "graph deploy --node https://api.thegraph.com/deploy/ yshrsail/non-profit-dao-subgraph",
+    "create-local": "graph create --node http://localhost:8020/ yshrsail/non-profit-dao-subgraph",
+    "remove-local": "graph remove --node http://localhost:8020/ yshrsail/non-profit-dao-subgraph",
+    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 yshrsail/non-profit-dao-subgraph"
+  },
+  "dependencies": {
+    "@graphprotocol/graph-cli": "0.24.1",
+    "@graphprotocol/graph-ts": "0.24.1"
+  }
+}

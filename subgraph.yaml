@@ -1,0 +1,26 @@
+specVersion: 0.0.1
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum/contract
+    name: Reputation
+    network: ropsten
+    source:
+      address: "0xb39be1545D83E2b1764C142F61a3E6c5f4Ab5033"
+      abi: Reputation
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.5
+      language: wasm/assemblyscript
+      entities:
+        - EvaluationStarted
+        - ReputationMinted
+      abis:
+        - name: Reputation
+          file: ./abis/Reputation.json
+      eventHandlers:
+        - event: EvaluationStarted(uint256,address[],uint256,uint256)
+          handler: handleEvaluationStarted
+        - event: ReputationMinted(uint256,address,address,uint256,string)
+          handler: handleReputationMinted
+      file: ./src/mapping.ts
