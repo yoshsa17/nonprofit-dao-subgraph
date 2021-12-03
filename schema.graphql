@@ -1,6 +1,64 @@
-type ExampleEntity @entity {
-  id: ID!
-  count: BigInt!
-  roundId: BigInt! # uint256
-  evaluators: [Bytes]! # address[]
+type Transaction @entity {
+	id: ID!
+	isIncoming: Boolean!
+	tokenOrEther: Bytes!
+	srcOrDst: Bytes!
+	amount: BigInt!
+	reference: String!
+	transactionHash: Bytes!
+}
+
+type User @entity {
+	id: ID!
+	tokenBalance: BigInt!
+	reputation: [Reputation!] @derivedFrom(field: "owner")
+	evaluatingLog: [Reputation!] @derivedFrom(field: "evaluator")
+	votingLog: [Vote!] @derivedFrom(field: "voter")
+	proposingLog: [Proposal!] @derivedFrom(field: "proposer")
+}
+
+type EvaluationRound @entity {
+	id: ID!
+	evaluators: String!
+	startBlock: BigInt!
+	endBlock: BigInt!
+	reputations: [Reputation!]! @derivedFrom(field: "evaluationRound")
+	transactionHash: Bytes!
+}
+
+type Reputation @entity {
+	id: ID!
+	owner: User!
+	evaluator: User
+	reason: String
+	expirationTime: BigInt!
+	evaluationRound: EvaluationRound
+	transactionHash: Bytes!
+}
+
+type Proposal @entity {
+	id: ID!
+	proposer: User!
+	description: String!
+	targets: String!
+	values: [BigInt!]!
+	calldatas: [Bytes!]!
+	startBlock: BigInt!
+	endBlock: BigInt!
+	forVotes: BigInt!
+	againstVotes: BigInt!
+	abstainVotes: BigInt!
+	canceled: Boolean!
+	executed: Boolean!
+	votes: [Vote!]! @derivedFrom(field: "proposal")
+}
+
+type Vote @entity {
+	id: ID!
+	voter: User!
+	proposal: Proposal!
+	support: Int!
+	weight: BigInt!
+	reason: String!
+	timestamp: BigInt!
 }
