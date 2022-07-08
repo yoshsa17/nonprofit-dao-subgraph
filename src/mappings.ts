@@ -41,7 +41,7 @@ export function handleProposalCreated(event: ProposalCreatedEvent): void {
   if(member == null) return;
 	proposal.proposer = event.params.proposer.toHexString();
 	proposal.description = event.params.description;
-	proposal.targets = event.params.targets.map(x => x.toHexString());
+	proposal.targets = event.params.targets.map<string>(x => x.toHexString());
 	proposal.values = event.params.values;
 	proposal.calldatas = event.params.calldatas;
 	proposal.startBlock = event.params.startBlock;
@@ -185,12 +185,18 @@ export function handleAddedNewRole(event: AddedNewRoleEvent): void {
   role.adminRole = adminRole.id;
   role.allowance = BigInt.fromI32(0);
   role.save();
-  event.params.initialMembers.forEach(member => {
-    let memberRole = new MemberRole(role.id.concat(member.toHexString()));
+  // https://www.assemblyscript.org/status.html#on-closures
+  for (let i = 0; i < event.params.initialMembers.length; i++) {
+    let member = event.params.initialMembers[i];
+    let memberRole = new MemberRole(event.params.roleId.toHexString().concat(member.toHexString()));
     memberRole.member = member.toHexString();
-    memberRole.role = role.id;
+    memberRole.role = event.params.roleId.toHexString();
     memberRole.save();
-  });
+    let memberRoleAdmin = new MemberRole(event.params.roleId.toHexString().concat(member.toHexString()));
+    memberRoleAdmin.member = member.toHexString();
+    memberRoleAdmin.role = event.params.adminRoleId.toHexString();
+    memberRoleAdmin.save();
+  };
 }
 
 export function handleRoleAdminChanged(event: RoleAdminChangedEvent): void {
