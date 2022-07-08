@@ -1,6 +1,6 @@
 specVersion: 0.0.4
-description: Non Profit DAO subgraph
-repository: https://github.com/yshrsail/non-profit-dao-subgraph
+description: NonprofitDAO subgraph
+repository: https://github.com/yoshsa17/nonprofit-dao-subgraph
 schema:
   file: ./schema.graphql
 dataSources:
@@ -8,7 +8,7 @@ dataSources:
     name: GovernorNPO
     network: mainnet
     source:
-      address: "0xfcd845f311421ec7889b24db36c62a8084518b9a"
+      address: "0xc481da0144c847096b8c99152093c8d5ec3d1bfa"
       abi: GovernorNPO
       startBlock: 0
     mapping:
@@ -45,7 +45,7 @@ dataSources:
     name: SBRTManager
     network: mainnet
     source:
-      address: "0xc481da0144c847096b8c99152093c8d5ec3d1bfa"
+      address: "0xfcd845f311421ec7889b24db36c62a8084518b9a"
       abi: SBRTManager
       startBlock: 0
     mapping:
