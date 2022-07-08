@@ -1,1 +1,1 @@
-# Non profit DAO Subgraph
+## Nonprofit DAO Subgraph
