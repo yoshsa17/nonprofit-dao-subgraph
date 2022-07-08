@@ -1,5 +1,5 @@
 {
-	"name": "non-profit-dao-subgraph",
+	"name": "nonprofit-dao-subgraph",
 	"version": "1.0.0",
 	"license": "MIT",
 	"scripts": {
@@ -11,7 +11,7 @@
 		"deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 yshrsail/non-profit-dao-subgraph"
 	},
 	"dependencies": {
-		"@graphprotocol/graph-cli": "0.24.1",
-		"@graphprotocol/graph-ts": "0.24.1"
+		"@graphprotocol/graph-cli": "0.32.0",
+		"@graphprotocol/graph-ts": "0.27.0"
 	}
 }
