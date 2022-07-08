@@ -1,15 +1,15 @@
-specVersion: 0.0.2
+specVersion: 0.0.4
 description: Non Profit DAO subgraph
 repository: https://github.com/yshrsail/non-profit-dao-subgraph
 schema:
   file: ./schema.graphql
 dataSources:
   - kind: ethereum/contract
-    name: NToken
+    name: GovernorNPO
     network: mainnet
     source:
-      address: "0x3A899d20932F44fC1daa9AD99bf5DFf9f8537d96"
-      abi: NToken
+      address: "0xfcd845f311421ec7889b24db36c62a8084518b9a"
+      abi: GovernorNPO
       startBlock: 0
     mapping:
       kind: ethereum/events
@@ -17,41 +17,36 @@ dataSources:
       language: wasm/assemblyscript
       file: ./src/mappings.ts
       entities:
-        - User
-      abis:
-        - name: NToken
-          file: ./abis/NToken.json
-      eventHandlers:
-        - event: Transfer(indexed address,indexed address,uint256)
-          handler: handleTransfer
-  - kind: ethereum/contract
-    name: Treasury
-    network: mainnet
-    source:
-      address: "0xA675493DFcfc79a6EED42510c123deD34eDBEc04"
-      abi: Treasury
-      startBlock: 0
-    mapping:
-      kind: ethereum/events
-      apiVersion: 0.0.5
-      language: wasm/assemblyscript
-      file: ./src/mappings.ts
-      entities:
+        - Member
+        - Proposal
+        - Vote
         - Transaction
       abis:
-        - name: Treasury
-          file: ./abis/Treasury.json
+        - name: GovernorNPO
+          file: ./abis/GovernorNPO.json
       eventHandlers:
-        - event: EtherSent(uint256,address,uint256,string)
+        - event: ProposalCreated(uint256,address,address[],uint256[],string[],bytes[],uint256,uint256,string)
+          handler: handleProposalCreated
+        - event: VoteCast(indexed address,uint256,uint8,uint256,string)
+          handler: handleVoteCast
+        - event: ProposalCanceled(uint256)
+          handler: handleProposalCanceled
+        - event: ProposalExecuted(uint256)
+          handler: handleProposalExecuted
+        - event: EtherSent(address,uint256,string)
           handler: handleEtherSent
-        - event: EtherDeposited(uint256,address,uint256,string)
+        - event: EtherDeposited(address,uint256)
           handler: handleEtherDeposited
+        - event: ApprovedToDomain(bytes32,uint256)
+          handler: handleApprovedToDomain
+        - event: RevokedDomainAllowance(bytes32)
+          handler: handleRevokedDomainAllowance
   - kind: ethereum/contract
-    name: Reputation
+    name: SBRTManager
     network: mainnet
     source:
-      address: "0x491C8Fe4579a28B4940DAe634aB0F0F0bE478623"
-      abi: Reputation
+      address: "0xc481da0144c847096b8c99152093c8d5ec3d1bfa"
+      abi: SBRTManager
       startBlock: 0
     mapping:
       kind: ethereum/events
@@ -61,40 +56,26 @@ dataSources:
       entities:
         - EvaluationRound
         - Reputation
-        - User
+        - Member
+        - Role
+        - MemberRole
       abis:
-        - name: Reputation
-          file: ./abis/Reputation.json
-      eventHandlers:
-        - event: EvaluationStarted(uint256,address[],uint256,uint256)
-          handler: handleEvaluationStarted
-        - event: ReputationMinted(uint256,address,address,uint256,string)
-          handler: handleReputationMinted
-  - kind: ethereum/contract
-    name: Voting
-    network: mainnet
-    source:
-      address: "0x411A661253C605b4f74Ef3cc92065d07C6d47611"
-      abi: Voting
-      startBlock: 0
-    mapping:
-      kind: ethereum/events
-      apiVersion: 0.0.5
-      language: wasm/assemblyscript
-      file: ./src/mappings.ts
-      entities:
-        - Proposal
-        - Vote
-        - User
-      abis:
-        - name: Voting
-          file: ./abis/Voting.json
-      eventHandlers:
-        - event: ProposalCreated(uint256,address,string,address[],uint256[],bytes[],uint256,uint256)
-          handler: handleProposalCreated
-        - event: VoteCast(address,uint256,uint8,uint256,string)
-          handler: handleVoteCast
-        - event: ProposalCanceled(uint256)
-          handler: handleProposalCanceled
-        - event: ProposalExecuted(uint256)
-          handler: handleProposalExecuted
+        - name: SBRTManager
+          file: ./abis/SBRTManager.json
+      eventHandlers:    
+        - event: SetEvaluationRound(uint256,uint64,uint64)
+          handler: handleSetEvaluationRound
+        - event: Minted(indexed address,indexed address,indexed uint256)
+          handler: handleMinted
+        - event: Burned(indexed address,indexed uint256)
+          handler: handleBurned
+        - event: AddedReputation(uint256,bytes32,address,address,string)
+          handler: handleAddedReputation
+        - event: AddedNewRole(string,string,bytes32,bytes32,address[])
+          handler: handleAddedNewRole
+        - event: RoleAdminChanged(indexed bytes32,indexed bytes32,indexed bytes32)
+          handler: handleRoleAdminChanged
+        - event: RoleGranted(indexed bytes32,indexed address,indexed address)
+          handler: handleRoleGranted
+        - event: RoleRevoked(indexed bytes32,indexed address,indexed address)
+          handler: handleRoleRevoked
