@@ -1,144 +1,90 @@
-
-type Member @entity {
-  "Ethereum address"
+ type Member @entity {
   id: ID!
-  "SBRT token ID"
-  tokenId: BigInt!
-  "Address of theinter"
+  token: Token! 
   acceptedBy: String!
-  "Reputation Count"
   rCount: Int!
-  "Evaluation Count"
   eCount: Int!
-  "Proposal Submission Count"
   pCount: Int!
-  "Voting Count"
   vCount: Int!
-  "Roles of the member"
-  role: [MemberRole!] @derivedFrom(field: "member")
-  "Reputations of the member"
-	reputation: [Reputation!] @derivedFrom(field: "contributor")
-  "Evaluation Logs"
-	evaluatingLog: [Reputation!] @derivedFrom(field: "evaluator")
-  "Voting Logs"
-	votingLog: [Vote!] @derivedFrom(field: "voter")
-  "Proposal Submissions Logs"
-	proposalSubmissionLog: [Proposal!] @derivedFrom(field: "proposer")
+  roles: [Role_Member!] @derivedFrom(field: "member")
+	reputations: [Reputation!] @derivedFrom(field: "contributor")
+	evaluatingLogs: [Reputation!] @derivedFrom(field: "evaluator")
+	proposalSubmissionLogs: [Proposal!] @derivedFrom(field: "proposer")
+	votingLogs: [Vote!] @derivedFrom(field: "voter")
 }
 
-type Role @entity {
-  "Role ID"
+type Token @entity {
   id: ID!
-  "Name of the role"
-  name: String!
-  "Admin Role"
-  adminRole: Role!
-  "Members of the role"
-  memebers: [MemberRole!] @derivedFrom(field: "role")
-  "Allowance of funds"
-  allowance: BigInt
-}
-
-type MemberRole @entity {
-  "ID combining memberId and roleId"
-  id: ID!
-  "Member"
-  member: Member!
-  "Role"
-  role: Role!
+  owner: Member!
+  uri: String!
 }
 
 type Reputation @entity {
-  "Transaction hash of the reputation"
 	id: ID!
-  "Domain of the reputation"
-  domain: Role!
-  "Owner of the reputation"
+  domain: Role
 	contributor: Member!
-  "Evaluator of the reputation"
 	evaluator: Member!
-  "Reason of the reputation"
 	reason: String
-  "Timestamp of the reputation"
+	evaluationRound: EvaluationRound
 	timestamp: BigInt!
-  "Evaluation Round of the reputation"
-	evaluationRound: EvaluationRound!
-  "Transaction hash of the reputation"
-	transactionHash: Bytes!
 }
 
+type Role @entity {
+  id: ID!
+  name: String
+  adminRole: Role
+  members: [Role_Member!] @derivedFrom(field: "role")
+  allowance: BigInt
+}
+
+type Role_Member @entity {
+  id: ID!
+  member: Member!
+  role: Role!
+}
+
+
 type EvaluationRound @entity {
-  "Evaluation Round ID"
 	id: ID!
-  "Start block of the evaluation round"
 	startBlock: BigInt!
-  "End block of the evaluation round"
 	endBlock: BigInt!
-  "Reputations of the evaluation round"
-	reputations: [Reputation!]! @derivedFrom(field: "evaluationRound")
+	reputations: [Reputation!] @derivedFrom(field: "evaluationRound")
 }
 
 type Proposal @entity {
-  "Proposal ID derived from the hash of targets + values + calldatas + descriptionHash"
 	id: ID!
-  "Proposer of the proposal"
 	proposer: Member!
-  "Description of the proposal"
 	description: String!
-  "Targets of the proposal transaction"
 	targets: [String!]!
-  "Values of the proposal transaction"
 	values: [BigInt!]!
-  "Calldatas of the proposal transaction"
 	calldatas: [Bytes!]!
-  "Start Block of the proposal"
 	startBlock: BigInt!
-  "End Block of the proposal"
 	endBlock: BigInt!
-  "Status of the proposal"
   Status: Int!
-  "Count of for votes"
 	forVotes: BigInt!
-  "Count of against votes"
 	againstVotes: BigInt!
-  "Count of abstain votes"
 	abstainVotes: BigInt!
-  "Boolean indicating whether the proposal is cancelled"
 	canceled: Boolean!
-  "Boolean indicating whether the proposal is executed"
 	executed: Boolean!
-  "Votes information of the proposal"
-	votes: [Vote!]! @derivedFrom(field: "proposal")
+	votes: [Vote!] @derivedFrom(field: "proposal")
+  timestamp: BigInt!
 }
 
 type Vote @entity {
-  "Transaction hash of the vote"
 	id: ID!
-  "Voter of the vote"
 	voter: Member!
-  "Proposal of the vote"
 	proposal: Proposal!
-  "Support of the vote"
 	support: Int!
-  "Weight of the vote"
 	weight: BigInt!
-  "Reason of the vote"
-	reason: String!
-  "Timestamp of the vote"
+	reason: String
 	timestamp: BigInt!
 }
 
 type Transaction @entity {
-  "Transaction hash of the transaction"
 	id: ID!
-  "Timestamp"
   timestamp: BigInt!
-  "Boolean indicating whether the transaction is incoming or outgoing"
 	isIncoming: Boolean!
-  "Source or destination address of the transaction"
 	srcOrDst: String!
-  "Amount of ether transferred"
 	amount: BigInt!
-  "Reference of the transaction"
 	reference: String
 }

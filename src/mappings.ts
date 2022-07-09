@@ -1,4 +1,4 @@
-import { BigInt, Address } from "@graphprotocol/graph-ts";
+import { BigInt, Address , store, Bytes, ByteArray, log} from "@graphprotocol/graph-ts";
 import {
   ProposalCreated as ProposalCreatedEvent,
   VoteCast as VoteCastEvent,
@@ -10,24 +10,26 @@ import {
   RevokedDomainAllowance as RevokedDomainAllowanceEvent,
 } from "../generated/GovernorNPO/GovernorNPO";
 import {
-	SetEvaluationRound as SetEvaluationRoundEvent,
-  AddedReputation as AddedReputationEvent,
   Minted as MintedEvent,
-  Burned as BurnedEvent,
+  AddedReputation as AddedReputationEvent,
   AddedNewRole as AddedNewRoleEvent,
-  RoleAdminChanged as RoleAdminChangedEvent,
   RoleGranted as RoleGrantedEvent,
+  RoleAdminChanged as RoleAdminChangedEvent,
+	SetEvaluationRound as SetEvaluationRoundEvent,
+  Burned as BurnedEvent,
   RoleRevoked as RoleRevokedEvent,
+  // SBRTManager as SBRTManagerContract,
 } from "../generated/SBRTManager/SBRTManager";
 
 import {
-	Transaction,
 	Member,
-  MemberRole,
-  Role,
+  Token,
 	Reputation,
+  Role,
+  Role_Member,
 	EvaluationRound,
 	Proposal,
+	Transaction,
 	Vote,
 } from "../generated/schema";
 
@@ -131,17 +133,21 @@ export function hadleRevokedAllowance(event: RevokedDomainAllowanceEvent): void 
 // SBRTManager Event Handlers
 // -----------------------------------------------------------
 
-export function handleSetEvaluation(event: SetEvaluationRoundEvent): void {
-	let round = new EvaluationRound(event.params.roundId.toString());
-	round.startBlock = event.params.startBlock;
-	round.endBlock = event.params.endBlock;
-	round.save();
-}
+// TODO: fix this. contract call dose not return tokenURI
+// function getTokenURI(address: Address, tokenId: BigInt): string {
+//   let managerContract = SBRTManagerContract.bind(address);
+//   let callResult = managerContract.try_tokenURI(tokenId);
+//   return callResult.reverted ? "" : callResult.value;
+// }
 
-// TODO:: refactor this when the contract is updated to mint multiple tokens per member
 export function handleMinted(event: MintedEvent): void {
+  let token = new Token(event.params.id.toString());
+  token.owner = event.params.to.toHexString();
+  token.uri = "";
+  token.save();
+
   let member = new Member(event.params.to.toHexString());
-  member.tokenId = event.params.id;
+  member.token = event.params.id.toString();
   member.acceptedBy = event.params.src.toHexString();
   member.rCount = 0;
   member.vCount = 0;
@@ -150,18 +156,17 @@ export function handleMinted(event: MintedEvent): void {
   member.save();
 }
 
-export function handleBurned(event: BurnedEvent): void {
-  let member = Member.load(event.params.owner.toString());
-  if (member == null) return;
-  member.tokenId = BigInt.fromI32(0);
-  member.save();
-}
-
+// TODO: refactor this not to use nullable types of Role entity
 export function handleAddedReputation(event: AddedReputationEvent): void {
-	let reputation = new Reputation(event.transaction.hash.toHexString());
+	let reputation = new Reputation(event.transaction.hash.toHex() + "-" + event.logIndex.toString());
 	reputation.contributor = event.params.contributor.toHexString();
 	reputation.evaluator = event.params.evaluator.toHexString();
-  reputation.domain = event.params.domainId.toString();
+  let domain = Role.load(event.params.domainId.toHexString());
+  if(!domain) {
+    domain = new Role(event.params.domainId.toHexString());
+    domain.save();
+  }
+  reputation.domain = event.params.domainId.toHexString();
 	reputation.reason = event.params.reason;
 	reputation.timestamp = event.block.timestamp;
 	reputation.evaluationRound = event.params.roundId.toString();
@@ -169,57 +174,71 @@ export function handleAddedReputation(event: AddedReputationEvent): void {
 
 	let receiver = Member.load(event.params.contributor.toHexString());
 	let evaluator = Member.load(event.params.evaluator.toHexString());
-	if (receiver == null || evaluator == null) return;
-  receiver.rCount = receiver.rCount++;
-  evaluator.eCount = evaluator.eCount++;
+	if (!receiver|| !evaluator) return;
+  receiver.rCount++;
+  evaluator.eCount++;
 	receiver.save();
   evaluator.save();
+  
+  // TODO: update tokenURI for receiver and evaluator
+  // let receiverToken = Token.load(receiver.token);
+  // let evaluatorToken = Token.load(evaluator.token);
+  // if(!receiverToken || !evaluatorToken) return;
+  // receiverToken.uri = getTokenURI(event.address, BigInt.fromString(receiverToken.id));
+  // evaluatorToken.uri = getTokenURI(event.address, BigInt.fromString(evaluatorToken.id));
+  // receiverToken.save();
+  // evaluatorToken.save();
+}
+
+export function handleRoleGranted(event: RoleGrantedEvent): void {
+  let roleMember = new Role_Member(event.params.roleId.toHexString().concat(event.params.account.toHexString()));
+  roleMember.role = event.params.roleId.toHexString();
+  roleMember.member = event.params.account.toHexString();
+  roleMember.save();
+  
+  // TODO: update tokenURI for account
+  // let member = Member.load(event.params.account.toHexString());
+  // if (!member) return;
+  // let accountToken = Token.load(member.token);
+  // if(!accountToken) return;
+  // accountToken.uri = getTokenURI(event.address, BigInt.fromString(accountToken.id));
+  // accountToken.save();
+}
+
+export function handleRoleAdminChanged(event: RoleAdminChangedEvent): void {
+  let role = Role.load(event.params.roleId.toHexString());
+  if(!role) return;
+  role.adminRole = event.params.newAdminRole.toHexString();
+  role.save();
 }
 
 export function handleAddedNewRole(event: AddedNewRoleEvent): void {
   let adminRole = new Role(event.params.adminRoleId.toHexString());
-  adminRole.name = event.params.adminRole;
+  adminRole.name = event.params.adminRoleName;
+  adminRole.adminRole = Bytes.fromI32(0).toHexString();
   adminRole.save();
+
   let role = new Role(event.params.roleId.toHexString());
-  role.name = event.params.role;
-  role.adminRole = adminRole.id;
+  role.name = event.params.roleName;
+  role.adminRole = event.params.adminRoleId.toHexString();
   role.allowance = BigInt.fromI32(0);
   role.save();
-  // https://www.assemblyscript.org/status.html#on-closures
-  for (let i = 0; i < event.params.initialMembers.length; i++) {
-    let member = event.params.initialMembers[i];
-    let memberRole = new MemberRole(event.params.roleId.toHexString().concat(member.toHexString()));
-    memberRole.member = member.toHexString();
-    memberRole.role = event.params.roleId.toHexString();
-    memberRole.save();
-    let memberRoleAdmin = new MemberRole(event.params.roleId.toHexString().concat(member.toHexString()));
-    memberRoleAdmin.member = member.toHexString();
-    memberRoleAdmin.role = event.params.adminRoleId.toHexString();
-    memberRoleAdmin.save();
-  };
 }
 
-export function handleRoleAdminChanged(event: RoleAdminChangedEvent): void {
-  let role = Role.load(event.params.role.toString());
-  if (role == null) return;
-  role.adminRole = event.params.newAdminRole.toString();
-  role.save();
+export function handleSetEvaluation(event: SetEvaluationRoundEvent): void {
+	let round = new EvaluationRound(event.params.roundId.toString());
+	round.startBlock = event.params.startBlock;
+	round.endBlock = event.params.endBlock;
+	round.save();
 }
 
-// TODO:: refactor this. define domainID as either String or Bytes
-export function handleRoleGranted(event: RoleGrantedEvent): void {
-  let memberRole = new MemberRole(event.params.role.toHexString().concat(event.params.account.toHexString()));
-  memberRole.member = event.params.account.toHexString();
-  memberRole.role = event.params.role.toHexString();
-  memberRole.save();
+export function handleBurned(event: BurnedEvent): void {
+  let member = Member.load(event.params.owner.toString());
+  if (member == null) return;
+  store.remove('Member', member.id);
 }
-
 export function handleRoleRevoked(event: RoleRevokedEvent): void {
-  let memberRole = MemberRole.load(event.params.role.toHexString().concat(event.params.account.toHexString()));
+  let memberRole = Role_Member.load(event.params.roleId.toHexString().concat(event.params.account.toHexString()));
   if (memberRole == null) return;
-  // TODO: refactor this to delete the member role
-  memberRole.unset("role");
-  memberRole.unset("member");
-  memberRole.unset('id');
-  memberRole.save();
+  store.remove('MemberRole', memberRole.id);
 }
