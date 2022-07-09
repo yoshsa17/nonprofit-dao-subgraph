@@ -1,17 +1,18 @@
 {
-	"name": "nonprofit-dao-subgraph",
-	"version": "1.0.0",
-	"license": "MIT",
-	"scripts": {
-		"codegen": "graph codegen",
-		"build": "graph build",
-		"deploy": "graph deploy --node https://api.thegraph.com/deploy/ yoshsa17/nonprofit-dao-subgraph",
-		"create-local": "graph create --node http://localhost:8020/ yoshsa17/nonprofit-dao-subgraph",
-		"remove-local": "graph remove --node http://localhost:8020/ yoshsa17/nonprofit-dao-subgraph",
-		"deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 yoshsa17/nonprofit-dao-subgraph"
-	},
-	"dependencies": {
-		"@graphprotocol/graph-cli": "0.32.0",
-		"@graphprotocol/graph-ts": "0.27.0"
-	}
+  "name": "nonprofit-dao-subgraph",
+  "version": "1.0.0",
+  "license": "MIT",
+  "scripts": {
+    "codegen": "graph codegen",
+    "build": "graph build",
+    "deploy": "graph deploy --node https://api.thegraph.com/deploy/ yoshsa17/nonprofit-dao-subgraph",
+    "create-local": "graph create --node http://localhost:8020/ yoshsa17/nonprofit-dao-subgraph",
+    "remove-local": "graph remove --node http://localhost:8020/ yoshsa17/nonprofit-dao-subgraph",
+    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 yoshsa17/nonprofit-dao-subgraph"
+  },
+  "dependencies": {
+    "@graphprotocol/graph-cli": "0.32.0",
+    "@graphprotocol/graph-ts": "0.27.0"
+  },
+  "devDependencies": {}
 }
